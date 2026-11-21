@@ -1,0 +1,4 @@
+node_modules
+.env
+clients/*.json
+!clients/example.json
