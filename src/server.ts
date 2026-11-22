@@ -9,6 +9,7 @@ import { createLlm, type Llm } from './ai/llm.js';
 import { isCallStatus } from './state.js';
 import { isOperatingMode, MODE_PROFILES, OPERATING_MODES } from './modes.js';
 import { dashboardHtml } from './dashboard/page.js';
+import { registerTestChat } from './testchat.js';
 import { commentDmCap } from './scoring.js';
 import { rampCap } from './pacing.js';
 import { z } from 'zod';
@@ -258,6 +259,8 @@ app.post<{ Params: { id: string } }>('/api/conversations/:id/ask', async (req, r
   const out = await askAboutThread(getBotLlm(), id, b.question);
   return out ?? reply.code(404).send({ error: 'not_found' });
 });
+
+registerTestChat(app);   // /test page + /api/test-chat (after the admin hook above, so the API needs ADMIN_TOKEN)
 
 app.setErrorHandler((err, _req, reply) => {
   if (err instanceof z.ZodError) return reply.code(400).send({ error: 'bad_request', issues: err.issues });
