@@ -74,7 +74,7 @@ export class AnthropicLlm implements Llm {
 // Free-tier friendly: set LLM_PROVIDER=gemini and GEMINI_API_KEY. Cost is logged as 0.
 // ---------------------------------------------------------------------------------------------
 type GFetch = (url: string, init: { method: string; headers: Record<string, string>; body: string }) => Promise<{ ok: boolean; status: number; text(): Promise<string> }>;
-type GPart = { text?: string; functionCall?: { name: string; args: unknown }; functionResponse?: { name: string; response: unknown } };
+type GPart = { text?: string; thoughtSignature?: string; functionCall?: { name: string; args: unknown }; functionResponse?: { name: string; response: unknown } };
 
 /** Gemini accepts an OpenAPI-style schema subset: drop keys it rejects. */
 function geminiSchema(v: unknown): unknown {
@@ -85,20 +85,33 @@ function geminiSchema(v: unknown): unknown {
   return v;
 }
 
-export function toGeminiContents(messages: Msg[]): Array<{ role: 'user' | 'model'; parts: GPart[] }> {
+export function toGeminiContents(messages: Msg[], sigFor?: (toolUseId: string) => string | undefined): Array<{ role: 'user' | 'model'; parts: GPart[] }> {
   const names = new Map<string, string>();          // tool_use id -> function name (Gemini responses are matched by name)
   for (const m of messages) if (Array.isArray(m.content)) for (const b of m.content) if (b.type === 'tool_use') names.set(b.id, b.name);
   return messages.map((m) => ({
     role: m.role === 'assistant' ? 'model' as const : 'user' as const,
     parts: typeof m.content === 'string' ? [{ text: m.content }] : m.content.map((b): GPart =>
       b.type === 'text' ? { text: b.text }
-        : b.type === 'tool_use' ? { functionCall: { name: b.name, args: b.input } }
+        : b.type === 'tool_use' ? { functionCall: { name: b.name, args: b.input }, ...(sigFor?.(b.id) ? { thoughtSignature: sigFor(b.id) } : {}) }
         : { functionResponse: { name: names.get(b.tool_use_id) ?? 'tool', response: b.is_error ? { error: b.content } : { result: b.content } } }),
   }));
 }
 
+/**
+ * Thinking control differs by model family:
+ *  - Gemini 2.5 Flash / Flash-Lite: thinkingBudget 0 switches thinking off.
+ *  - Gemini 3.x Flash-Lite: rejects thinkingBudget (HTTP 400); thinkingLevel "minimal" is the closest to off.
+ *  - Other Gemini 3+ models: send nothing (thinkingBudget is deprecated there); the caller adds output headroom instead.
+ */
+export function geminiThinkingConfig(model: string): Record<string, unknown> | undefined {
+  if (/^gemini-[3-9]/.test(model)) return model.includes('flash-lite') ? { thinkingLevel: 'minimal' } : undefined;
+  return model.includes('flash') ? { thinkingBudget: 0 } : undefined;
+}
+
 export class GeminiLlm implements Llm {
   private n = 0;
+  /** Gemini 3+ returns a thoughtSignature with each function call and requires it back on the next request. */
+  private sigs = new Map<string, string>();
   constructor(
     private onUsage?: UsageHook,
     private apiKey?: string,
@@ -106,18 +119,27 @@ export class GeminiLlm implements Llm {
     private fetchImpl: GFetch = (url, init) => fetch(url, init),
   ) {}
 
+  private remember(id: string, sig: string) {
+    if (this.sigs.size >= 500) { const first = this.sigs.keys().next().value; if (first !== undefined) this.sigs.delete(first); }
+    this.sigs.set(id, sig);
+  }
+
   async complete(a: CompleteArgs): Promise<LlmResult> {
+    const g3 = /^gemini-[3-9]/.test(this.model);
+    const thinking = geminiThinkingConfig(this.model);
+    // Calls we never saw the signature for (e.g. history from another process) use Google's documented bypass value.
+    const sigFor = (id: string) => this.sigs.get(id) ?? (g3 ? 'skip_thought_signature_validator' : undefined);
     const body = {
       systemInstruction: { parts: [{ text: a.system }] },
-      contents: toGeminiContents(a.messages),
+      contents: toGeminiContents(a.messages, sigFor),
       ...(a.tools?.length ? {
         tools: [{ functionDeclarations: a.tools.map((t) => ({ name: t.name, description: t.description, parameters: geminiSchema(t.input_schema) })) }],
         toolConfig: { functionCallingConfig: a.toolChoice?.type === 'tool' ? { mode: 'ANY', allowedFunctionNames: [a.toolChoice.name] } : { mode: 'AUTO' } },
       } : {}),
       generationConfig: {
-        maxOutputTokens: a.maxTokens,
-        // 2.5 Flash "thinks" by default and thinking tokens eat the output budget; short chat replies do not need it.
-        ...(this.model.includes('flash') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+        // Thinking tokens count against the output budget, so models that keep thinking on get extra headroom.
+        maxOutputTokens: a.maxTokens + (g3 && !thinking ? 1024 : 0),
+        ...(thinking ? { thinkingConfig: thinking } : {}),
       },
     };
     const res = await this.fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent`, {
@@ -135,7 +157,11 @@ export class GeminiLlm implements Llm {
     const content: Block[] = [];
     for (const p of cand?.content?.parts ?? []) {
       if (p.text) content.push({ type: 'text', text: p.text });
-      else if (p.functionCall) content.push({ type: 'tool_use', id: `gemini_${Date.now()}_${this.n++}`, name: p.functionCall.name, input: p.functionCall.args ?? {} });
+      else if (p.functionCall) {
+        const id = `gemini_${Date.now()}_${this.n++}`;
+        if (p.thoughtSignature) this.remember(id, p.thoughtSignature);
+        content.push({ type: 'tool_use', id, name: p.functionCall.name, input: p.functionCall.args ?? {} });
+      }
     }
     const um = json.usageMetadata ?? {};
     const usage: Usage = { input: um.promptTokenCount ?? 0, output: um.candidatesTokenCount ?? 0, cacheRead: um.cachedContentTokenCount ?? 0, cacheWrite: 0 };
