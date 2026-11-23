@@ -1,0 +1,36 @@
+{
+  "name": "Example Fitness Studio",
+  "timezone": "America/Toronto",
+  "platformApiKey": "PASTE_INSTANTDM_API_KEY",
+  "instagramAccountId": "PASTE_IG_ACCOUNT_ID",
+  "settings": {
+    "businessSummary": "Small-group strength and conditioning studio in Ottawa for busy adults.",
+    "offer": "A free 20-minute intro call, then a 4-week starter program",
+    "idealCustomer": "Adults 25-55 in the Ottawa area who want to get stronger and are ready to start within a month",
+    "disqualifiers": [
+      "Lives outside the Ottawa area and wants in-person only",
+      "Only wants free workouts"
+    ],
+    "qualificationQuestions": [
+      "What they want to achieve",
+      "How soon they want to start",
+      "Whether they are in the Ottawa area"
+    ],
+    "tone": "Friendly, casual, encouraging. Short sentences. Occasional light humour.",
+    "forbiddenClaims": [
+      "guaranteed results",
+      "lose 10 pounds",
+      "medical"
+    ],
+    "bookingLink": "https://cal.com/example/intro"
+  },
+  "knowledge": "Program: 4-week starter program, $400.\n\nSchedule: classes Mon-Sat mornings and evenings.\n\nLocation: Ottawa, Ontario. Small groups of up to 8.\n\nIntro call: free, 20 minutes, with a coach.",
+  "commissionRate": 0.2,
+  "calendarProvider": "link",
+  "defaultMode": "qualify_and_book",
+  "minCommentDmScore": 60,
+  "maxCommentDmsPerDay": 30,
+  "commentDmMinGapMinutes": 3,
+  "lowScoreAction": "review",
+  "humanPauseHours": 24
+}
