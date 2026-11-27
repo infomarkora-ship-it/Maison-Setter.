@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" data-theme="auto" data-size="m" data-contrast="off">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Maison Setter</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2319191d'/%3E%3Ctext x='16' y='21.5' font-family='Arial' font-size='13' font-weight='700' fill='%23ffffff' text-anchor='middle'%3EMS%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<div id="live" class="sr-only" role="status" aria-live="polite"></div>
+<div id="toasts" class="toasts" aria-label="Notifications"></div>
+
+<section id="login" class="login" hidden aria-labelledby="loginTitle">
+  <form id="loginForm" class="login-card" novalidate>
+    <div class="brand"><span class="mark" aria-hidden="true"></span><h1 id="loginTitle">Maison Setter</h1></div>
+    <p class="muted">Sign in to your growth command center.</p>
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" aria-describedby="loginMsg">
+    <button type="submit" class="btn primary wide">Sign in</button>
+    <p id="loginMsg" class="msg" role="alert"></p>
+    <p class="muted version-line">Server build: <b id="serverVersion">checking…</b> (this page is v3.6.0)</p>
+  </form>
+</section>
+
+<div id="app" class="shell" hidden>
+  <aside id="side" class="side" aria-label="Sidebar">
+    <div class="brand"><span class="mark" aria-hidden="true"></span><span class="brand-name">Maison Setter</span><span class="brand-sub">Growth OS · <span id="brandVersion">v3.6.0</span></span></div>
+    <nav aria-label="Main"><ul id="nav" class="nav"></ul></nav>
+    <div class="side-foot">
+      <div id="livePill" class="live-pill off"><span class="dot" aria-hidden="true"></span><span id="liveText">Connecting</span></div>
+      <details class="prefs">
+        <summary>Display</summary>
+        <label for="theme">Theme</label>
+        <select id="theme"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select>
+        <label for="size">Text size</label>
+        <select id="size"><option value="m">Normal</option><option value="l">Large</option><option value="xl">Extra large</option></select>
+        <label class="check"><input type="checkbox" id="contrast"> High contrast</label>
+      </details>
+      <button type="button" id="logout" class="btn ghost wide">Sign out</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <div class="main-col">
+    <header class="top">
+      <button type="button" id="menu" class="icon-btn menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="side"></button>
+      <div class="grow"><h1 id="pageTitle" tabindex="-1"></h1><span id="pageSub" class="sub"></span></div>
+      <div class="filters" id="filters">
+        <div class="search-wrap">
+          <input id="globalSearch" type="search" autocomplete="off" placeholder="Search leads, messages, campaigns…" aria-label="Global search">
+          <div id="searchPop" class="search-pop" hidden></div>
+        </div>
+        <div class="search-wrap">
+          <button type="button" id="bellBtn" class="icon-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false"></button>
+          <div id="notifPop" class="notif-pop" hidden></div>
+        </div>
+        <label class="sr-only" for="fClient">Campaign</label>
+        <select id="fClient"></select>
+        <label class="sr-only" for="fDays">Time range</label>
+        <select id="fDays"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<div id="drawerWrap" class="drawer-wrap" hidden>
+  <div class="drawer-scrim" id="drawerScrim"></div>
+  <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"></aside>
+</div>
+<script src="/app.js?v=3.6.0"></script>
+<script src="/views.js?v=3.6.0"></script>
+<script src="/views2.js?v=3.6.0"></script>
+<script src="/views3.js?v=3.6.0"></script>
+<script src="/views4.js?v=3.6.0"></script>
+<script src="/views5.js?v=3.6.0"></script>
+</body>
+</html>

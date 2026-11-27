@@ -1,0 +1,21 @@
+{
+  "name": "maison-setter-server",
+  "version": "3.6.0",
+  "private": true,
+  "description": "Maison Setter server: lead import, pre-filter, AI bouncer, review, Instantly-style day-by-day warm-up programs with health gating, safe sending, CRM pipeline, appointments, opportunities, ROI, an AI lab for testing the bot, live sender monitoring, customizable warm-up plans, dual AI providers (Claude Haiku and Gemini), a live growth command center for the Maison Setter Chrome extension, a describe-it AI builder for every section, an 8-question onboarding interview that produces the company brain and a draft ICP, a layered knowledge base with a built-in appointment-setting playbook, AI-personalized openers, a trained appointment setter and a context-based supervisor.",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning test/run.js && node --disable-warning=ExperimentalWarning test/ui.js && EXT_DIR=${EXT_DIR:-../maison-setter-extension/} node --disable-warning=ExperimentalWarning test/e2e-extension.js && RUNNER_DIR=${RUNNER_DIR:-../magnetengine-runner/} node --disable-warning=ExperimentalWarning test/e2e-runner.js",
+    "test:server": "node --disable-warning=ExperimentalWarning test/run.js",
+    "test:ui": "node --disable-warning=ExperimentalWarning test/ui.js",
+    "test:extension": "EXT_DIR=${EXT_DIR:-../magnetengine-extension/} node --disable-warning=ExperimentalWarning test/e2e-extension.js",
+    "test:runner": "RUNNER_DIR=${RUNNER_DIR:-../magnetengine-runner/} node --disable-warning=ExperimentalWarning test/e2e-runner.js"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}
